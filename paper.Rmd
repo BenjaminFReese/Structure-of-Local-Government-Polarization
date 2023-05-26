@@ -1,0 +1,109 @@
+---
+title: "The Relationship Between Racial Resentment & Gender Mood"
+author: "Benjamin Reese"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+## Packages
+library(tidyverse)
+library(fixest)
+library(readxl)
+library(haven)
+library(Metrics)
+
+## Data Loading
+load("~/race_sex/final_result_long.RData")
+sex <- read_excel("kochthomsen_gem.xlsx")
+USstates <- read_excel("~/GOVT8002/Lab III/USstates.xlsx")
+
+## Data Cleaning & Wrangling
+x2 <- x %>%
+  left_join(USstates, by = c("stateabbrev" = "stateAbbr")) %>%
+  select(year, stateabbrev, resentscore, state)
+
+dta <- x2 %>%
+  left_join(y, by = c("state" = "namestate", "year"))
+
+dta <- dta %>%
+  filter(dta$gendermood != "NA") %>%
+  select(-conf_int)
+
+dta$resid <- c(resid(lm(gendermood ~ resentscore, data = subset(dta, year==1988))),
+               resid(lm(gendermood ~ resentscore, data = subset(dta, year==1990))),
+               resid(lm(gendermood ~ resentscore, data = subset(dta, year==1992))),
+               resid(lm(gendermood ~ resentscore, data = subset(dta, year==1994))),
+               resid(lm(gendermood ~ resentscore, data = subset(dta, year==2000))),
+               resid(lm(gendermood ~ resentscore, data = subset(dta, year==2004))),
+               resid(lm(gendermood ~ resentscore, data = subset(dta, year==2008))))
+
+load("~/race_sex/replication_data.RData")
+
+dta <- dta %>%
+  left_join(x, by = c("year" = "year", "state" = "state"))
+
+state_info <- read_dta("Replication_state_level.dta")
+
+dta <- dta %>%
+  left_join(state_info, by = c("year" = "year", "state" = "state"))
+
+```
+
+```{r}
+dta %>%
+  ggplot(aes(x=as.factor(year), y=resid, group = year)) +
+  geom_point(position = "jitter", alpha = .4, color = "dodgerblue") + 
+  geom_boxplot(alpha=.7, color = "midnightblue") +
+  theme_bw() +
+  labs(x = "Year", y = "Residuals",
+       title = "Variation in Residuals Over Time",
+       subtitle = "Distribution of Errors Consistent Across Years",
+       caption = "Data Source: Smith et al. (2020) and Koch & Thomsen (2017)")
+```
+
+```{r}
+r2 <- c(summary(lm(gendermood ~ resentscore, data = subset(dta, year==1988)))$adj.r.squared,
+        summary(lm(gendermood ~ resentscore, data = subset(dta, year==1990)))$adj.r.squared,
+        summary(lm(gendermood ~ resentscore, data = subset(dta, year==1992)))$adj.r.squared,
+        summary(lm(gendermood ~ resentscore, data = subset(dta, year==1994)))$adj.r.squared,
+        summary(lm(gendermood ~ resentscore, data = subset(dta, year==2000)))$adj.r.squared,
+        summary(lm(gendermood ~ resentscore, data = subset(dta, year==2004)))$adj.r.squared,
+        summary(lm(gendermood ~ resentscore, data = subset(dta, year==2008)))$adj.r.squared)
+
+df %>%
+  ggplot(aes(x=year, y=r2)) +
+  geom_line(linewidth = 1.3, color = "dodgerblue") + 
+  theme_bw() +
+  labs(x = "Year", y = "R Squared",
+       title = "R Squared Racial Resent & Gender Mood By Year")
+
+```
+
+```{r}
+rmse <- c(rmse(dta$gendermood[dta$year==1988], 
+                 lm(gendermood ~ resentscore, data = subset(dta, year==1988))$fitted.values),
+              rmse(dta$gendermood[dta$year==1990], 
+                   lm(gendermood ~ resentscore, data = subset(dta, year==1990))$fitted.values),
+              rmse(dta$gendermood[dta$year==1992], 
+                   lm(gendermood ~ resentscore, data = subset(dta, year==1992))$fitted.values),
+              rmse(dta$gendermood[dta$year==1994], 
+                   lm(gendermood ~ resentscore, data = subset(dta, year==1994))$fitted.values),
+              rmse(dta$gendermood[dta$year==2000], 
+                   lm(gendermood ~ resentscore, data = subset(dta, year==2000))$fitted.values),
+              rmse(dta$gendermood[dta$year==2004], 
+                   lm(gendermood ~ resentscore, data = subset(dta, year==2004))$fitted.values),
+              rmse(dta$gendermood[dta$year==2008], 
+                   lm(gendermood ~ resentscore, data = subset(dta, year==2008))$fitted.values))
+
+df %>%
+  ggplot(aes(x=year, y=rmse)) +
+  geom_line(linewidth = 1.3, color = "dodgerblue") + 
+  theme_bw() +
+  ylim(2.5,3.75) +
+  labs(x = "Year", y = "RMSE",
+       title = "RMSE Racial Resent & Gender Mood By Year")
+```
+
