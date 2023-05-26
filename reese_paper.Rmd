@@ -1,0 +1,306 @@
+---
+title: "Polarization & Municipal Government Structure"
+author: "Benjamin Reese"
+date: "`r Sys.Date()`"
+output: pdf_document
+fontsize: 12pt
+tables: true
+header-includes:
+    - \usepackage{setspace}\doublespacing
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+## Packages
+library(readr)
+library(tidyverse)
+library(fixest)
+library(mfx)
+library(texreg)
+
+## Data Importation
+dta <- read_csv("competition_OC_out_ALL.csv") %>%
+  mutate(council_manager = if_else(form_of_gov == "Council-Manager", 1, 0)) %>%
+  filter(lop == 0.01)
+
+```
+
+
+# 1. Introduction
+
+What determines the structure of local governments? The two dominant forms of municipal government in the US are: council-manager systems, in which an elected council appoints a manager to oversee the executive functions of the city government while the council retains political power; and mayor-council systems, in which the chief executive of the city is elected - not appointed by the council - and political power is distributed between the mayor's office and the council. While the determinants and causal mechanisms of why cities adopt certain political systems is not as well known, the causal effects of these different forms of local government have been thoroughly explored by scholars of urban politics and there exist numerous typologies related to how municipal governments are organized (DeSantis & Renner 2002, Nelson & Svara 2010, Feiock et al. 2016). 
+
+Research into the effects of differing local forms of government regularly returns conflicting or null results. For instance, Nelson & Svara (2012) argue that policy innovation is greater in council-manager systems than in mayor-council systems and Nelson & Nollenberger (2011) find evidence to suggest that council-manager systems have higher levels of political conflict. These findings contrast with the more commonly held view that the form of local government has no systematic relationship with political or policy outcomes such as government spending, policy innovation, or economic well-being (Morgan & Pelissero 1980, West & Berman 1997, Moon & Norris 2005, Carr & Karuppusamy 2008, MacDonald 2008). Carr (2015) uses a meta-analysis to  synthesize this large body of research to conclude that, in terms of the quality of public services, civic engagement, and government responsiveness, there is no statistically distinguishable difference between mayor-council and city manager governmental structures. However, more recent research by Aguado (2018) argues that mayor-council systems were less likely to implement austerity measures following the 2008 financial collapse than their council-manager counterparts. 
+
+Since the bulk of these results heavily depend on exact classification schemes and the level of granularity researchers use to categorize the differences between council-manager and mayor-council systems, the effects of different systems of municipal government are hotly debated. There appears to be, at the very least, no conclusive evidence to suggest that there are better policy and participation outcomes under one form of governance compared to the other. Why, then, are cities adopting council-manager systems of governance and replacing their mayor-council structures? I argue one contributing factor is a city's level of elite polarization.
+
+The National League of Cities conducted surveys of local governments and found that between 1996 and 2006, the usage of council-manager systems increased from 48% to 55%.^[https://www.nlc.org/resource/cities-101-forms-of-local-government/]. This adoption of council-manager forms of municipal government occurred when the benefits of adopting this type of reform were unclear. This paper uses measures of political polarization derived from a 5-year analysis of municipal-level council roll call voting records to argue that a city council's polarization is connected to a city's governmental structure.
+
+Using a probit model that estimates the effect of a city's roll call polarization on whether or not that city has a council-manager system, I argue that higher levels of polarization are associated with higher predicted probabilities that a city has a council-manager form of government. I further theorize that more contentious city councils with rigid voting coalitions may seek to insulate some degree of executive functions to a nominally non-partisan expert bureaucrat, instead of resting power in a politically elected mayor. 
+
+This paper makes two advances: first, it offers a theory of why certain cities have the political institution they have, and, second, it explores the role of elite polarization in local political institutions. The remainder of this paper is organized as follows: (1) summarizes the hypotheses and data; (2) presents the results; (3) offers come concluding remarks.
+
+# 2. Data & Hypotheses
+
+## Theoretical Considerations
+
+When designing systems of governance, local political leaders obviously must contend with their city's political polarization dynamic, meaning cities' strategic decisions to adopt one form of government over another may relate to how contentious a city's politics are. In cities that have councilors with heterogeneous preferences, we may observe gridlock resulting from polarization and divergent legislator preferences. If this is the case, an insulated city manager in a council-manager system may afford divided city councils the chance to have an executive overseeing the day-to-day functioning of local government, while division is relegated to the city council chambers. Similarly, cities that are unified and non-partisan, or dominated by homogeneous and cohesive political parties, may want to increase the powers of mayors, as the mayor is the local party leader. In other words, when polarization is high and the city council is divided, a council-manager may be more likely, to ensure the executive functions of the city are isolated from contentious politics. In this way, council-manager systems may be a function of the desire of successful local legislative political coalitions to insulate their policy victories from future changes as state legislatures and Congress seek to do when designing executive agencies (McCubbins 1985; McCubbins, Noll, & Weingast 1987, 1989, 1990a, 1990b; Moe 1989; Epstein & O'Halloran 1994; Bawn 1994).
+
+## Hypotheses
+
+From the brief theoretical considerations above, I derive related testable hypotheses. Overall, regardless of partisanship, I expect that city councils that are more divided in terms of roll call voting will be more likely to have council-manager systems, which can insulate the city executive from political pressures resulting from a divided city council.
+
+$H_{1A}$: When polarization is high, council-manager systems are more likely.
+
+$H_{1B}$: When polarization is low, mayor-council systems are more likely.
+
+$H_0$: Polarization has no statistically significant effect on the probability that a city has one form of government over another.
+
+## Polarization
+
+A common challenge in studying urban politics and local politics is the lack of adequate data with which to test important and politically relevant hypotheses. American political institutions scholars, who have mined the study of Congress and, increasingly, state legislatures, have rarely sought answers to their major questions at the local level. While the variation in institutions and partisan dynamics makes local city councils fertile ground for research (Trounstine 2009), the lack of availability of city council roll call data and the yet undiscovered methodology to bridge councils renders city council roll call voting analysis quite a niche topic.  Bucchianeri (2020), in part, resolved some of these issues by utilizing optimal classification (Poole 2000) to analyze the roll call voting behavior of city councilors in 152 American cities and constructed measures of their ideology. These local legislator ideology measures are analogous to NOMINATE in Congress (Poole & Rosenthal 2006), Shor & McCarty's (2011) ideological scores for state legislators, Martin & Quinn's (2002) ideology estimates for Supreme Court justices, and Bailey et al.'s (2017) country-level measures using UN voting data.
+
+From the spatial model Bucchianeri (2020) used to create the measures, he calculates the aggregate proportional reduction in error, or APRE, which is essentially how well the spatial model fits the data and is calculated by:
+
+\begin{equation}
+\frac{\sum^q_{i=1}(Minority\ Votes-Classification\ Errors)_i}{\sum^q_{i=1}Minority\ Votes_i}
+\end{equation}
+
+In accordance, I use how well the data fits a unidimensional model, which is the APRE that assumes a one-dimensional model, as the measure of polarization. The higher the APRE, the more votes are divided on a unidimensional scale and thus, the more divided the city council and the more rigid the voting coalitions are. I use this as a proxy for polarization. If the APRE is low, however, legislative voting is more scattered and long-term stable voting coalitions are not forming, indicative of a lack of polarization. While I would need some form of bridging technique to compare the ideological estimates between cities, the APRE can readily be compared between cities without any additional complications. I am not comparing ideology or polarization across cities, I am comparing cities internal levels of polarization, so there is no bridging necessary. The resulting measure is a continuous scale of how divided each city council is on one dimension. 
+
+## Form of City Government
+
+I use the International City/Council Management Association (ICMA) classifications for city governments. All of the cities in the data fit one of three types: mayor-council, council-manager, or commission. Mayor-council governments, as mentioned above, elect a mayor to be the chief executive of the city and this style of government is more common in large US cities like New York City, NY, Los Angeles, CA, and Chicago, IL. Council-manager cities have weaker chief executives appointed by the elected council and are more common in small and medium sized cities like Ann Arbor, MI and Gainesville, GA, but also some larger cities like Dallas, TX. Finally, only Coral Gables, FL, Indian Wells, CA  and Vicksburg, VA are classified as "Commission" type city governments, which usually elect a city council in at-large elections, and more evenly distribute power amongst members so that legislative and executive authority are shared between members. All told, 28% of the cities are mayor-council systems, 70% are council-manager systems, and the remaining 2% are commission-style governments. Because of the extremely small number of commission-style governments, I code cities with a council-manager systems as a 1, and 0 otherwise. Thus, I am mostly comparing the predicted probability that a city has a council-manager system versus a mayor-council system.
+
+## Covariates
+
+To avoid potential confounding, I include a range of covariates that seek to balance cities based on political, economic, and demographic factors. All of these covariates are found in the replication data for Bucchianeri (2020). I discuss each of these below.
+
+For the political covariates, I include a dichotomous indicator for whether or not a city has partisan elections. I further include the Tausanovitch and Warshaw (2013 & 2014) MRP estimates of local ideology to capture any imbalances in the preferences of the electorate between localities. For economic controls, I include the percentage of a city's population below the poverty line and a city's mean household income. Finally, for demographic factors, I include the log of a city's total population, the percent of a city that is classified as urban based on population density, the percent of a city that is African-American, the percent of a city that is non-white Hispanic, and the proportion of a city with at least a high school degree. The goal of including these covariates is to ensure that there is as much balance as possible across cities so that I can isolate the effect of polarization on a city's system of governance free from confounding variables.
+
+## Research Design
+
+This paper uses a basic probit model to estimate the effect of a city council's polarization on the city's system of governance. The model looks like this:
+
+\begin{equation}
+Pr(G_{i}=1|\ \alpha\ + \gamma P_i + X_{i}\beta' + \epsilon_i)
+\end{equation}
+
+Where $Pr(G_i=1)$ is the probability that city $i$'s form of government is a council-manager system; $P_i$ is the level of polarization in city $i$ as determined by the APRE in each city; $X_{i}\beta'$ is a vector of covariates and their coefficients; and $\epsilon_i$ is the error term.
+
+Though the roll call data was collected for several years of each city council, the voting records were pooled and all analyzed together to create the ideology and polarization measures (Bucchianeri 2020), so the data is cross-sectional and, obviously observational, in that it only captures the 152 cities whose roll call voting records were easily scrapable and only captures one time period. This is certainly a limitation of the research design, but one that is necessary as the lack of measures for city councilor ideology render a more expansive research design untenable.
+
+Finally, this research design, owing to the limited span of data and lack of a reliable measure of exactly when cities switched to council-manager systems, cannot definitely estimate a causal effect. Instead, this paper seeks to establish a definitive and statistically significant relationship - for the first time - between city-level elite polarization and types of municipal government.
+
+# 3. Results
+
+*Table 1* reports this paper's main results. Overall, the higher the APRE of a city - the more polarized a city is - the more likely that city is to have a council-manager system as compared to a mayor-council or a commission form of government. This effect is both substantively large and highly statistically significant. *Table 1* contains the results of five models with varying control variables. Column (1) is the basic bivariate relationship; column (2) includes the political covariates; column (3) includes the economic covariates; column (4) includes the demographic covariates; and column (5) includes all covariates. Though the coefficients from the probit model are not directly interpretable, the effect of higher levels of polarization, APRE, is positive and statistically significant at the 99% CL across all five of the models.  Therefore, the estimated effect of polarization on the predicted probability that a city has a council-manager form of government is robust to varying model specifications. 
+
+```{r, results='asis'}
+model1 <- dta %>%
+  feglm(council_manager ~ apre_1D, family = binomial(link = "probit"))
+
+model2 <- dta %>%
+  feglm(council_manager ~ apre_1D + partisan_elec + tw_mrp_ideology_mean,
+        family = binomial(link = "probit"))
+
+model3 <- dta %>%
+  feglm(council_manager ~ apre_1D + perc_hh_poverty + median_hh_inc,
+        family = binomial(link = "probit"))
+
+model4 <- dta %>%
+  feglm(council_manager ~ apre_1D + log(total_pop) + perc_urban + perc_black + perc_hispanic +  perc_HS_grads,
+        family = binomial(link = "probit"))
+
+model5 <- dta %>%
+  feglm(council_manager ~ apre_1D + tw_mrp_ideology_mean + partisan_elec + log(total_pop) + perc_urban + perc_black +
+          perc_hispanic + perc_HS_grads + perc_hh_poverty + median_hh_inc, family = binomial(link = "probit"))
+
+etable(model1, model2, model3, model4, model5, tex = TRUE, title = "Effect of Polarization on Style of Municipal Government",
+       dict = c("council_manager" = "Council Manager", "apre_1D" = "APRE", 
+                "tw_mrp_ideology_mean" = "Citizen Ideology", "partisan_elec" = "Partisan Elections",
+                "log(total_pop)" = "ln (Pop)", "perc_urban" = "% Urban", "perc_black" = "% Black",
+                "perc_hispanic" = "% Hispanic", "perc_HS_grads" = "% HS Grad", "perc_hh_poverty" = "% Povery",
+                "median_hh_inc" = "Median Income"),
+       notes = "Model (1) is the basic bivariate relationship. Model (2) includes the political covariates. Model (3) includes the economic covariates. Model (4) includes the demographic covariates. Model (5) includes all covariates.")
+```
+
+As can be seen in *Figure 1*, the 95% CIs are all positive, none include zero, and they all suggest higher levels of polarization have a statistically significant effect on the predicted probability that a local government would have a council-manager system. The 95% CIs are quite wide, however, indicating that there is some, perhaps a large, degree of uncertainty in the magnitude of the effect of polarization. Despite the wide confidence intervals, the effect of polarization is still highly statistically significant across all models tested. Further, the point estimates are highly consistent across models.
+
+```{r, results='asis'}
+coefplot(list(model1, model2, model3, model4, model5), dict = c("apre_1D" = "APRE"), keep = "APRE",
+         main = "Effect of Polarization on Style of Municipal Government", ylim = c(-1,6))
+legend("topleft", col = 1:5, pch = 20, lwd = 1, lty = 1:4, cex = .7,
+       legend = c("No Controls", "Political Controls", "Economic Controls", "Demographic Controls", "All Controls"))
+```
+
+In terms of substantive significance, *Table 2* displays the marginal effects from Model (5) in *Table 1*. This is the model that includes all of the control variables. When examining the marginal effects, an increase of one unit, or moving from 0 in APRE - no discernible voting pattern - to 1 in APRE - perfectly divided and highly polarized city council voting - there is a .89 percentage point increase in the predicted probability that a city has a council-manager system. This is a massive effect size and highly substantively significant. A one unit increase, from 0 to 1 in APRE is incredibly unlikely, though, as the average APRE across cities is `r mean(dta$apre_1D, na.rm=T) %>% round(2)`, so such a large increase would probably not actually be observed. 
+
+To better understand the marginal effect of higher levels of polarization on the probability that a city has a council-manager form of government, I examine the effect of a smaller and more reasonable increase in APRE. A more reasonable increase, of about .2, in APRE, would correspond to a `r (.89/5)*100` percentage point increase in the predicted probability that a city would have a council-manager government. Even with the smaller increase in APRE, this is still quite a large effect size, as it is an increase of nearly 20 percentage points in predicted probabilities that we observe a council-manager form of government. This means that cities that are polarizing are potentially far more likely to adopt a council-manager style of government compared to city councils that have less rigid and less contentious legislative politics.
+
+```{r, results='asis'}
+s <- probitmfx(model5, data = dta, atmean = FALSE)
+texreg(s, caption = "Marginal Effects From Model 5", label = "Marginal Effect of APRE on Form of Local Governments",
+       caption.above = TRUE, custom.coef.names = c("APRE", "Citizen Ideology", "Partisan Elections",
+                                                   "ln (Pop)", "% Urban", "% Black", "% Hispanic", "% HS Grad",
+                                                   "% Povery", "Median Income"),
+       custom.model.names = "Council Manager")
+
+```
+
+In sum, higher levels of polarization, as measured by the APRE of the city-specific optimal scaling models, are associated with increases in the predicted probability that a city has a council-manager form of government. This is enough evidence to reject the null hypothesis of no effect of polarization and is evidence in support of $H_{1A}$ and $H_{1B}$. Thus, one contributing factor to the rise in council-manager governments may be a rise in city-level political polarization.
+
+
+# 4. Discussion & Conclusion
+
+This paper utilized a probit model to determine the effect of elite polarization on whether or not a city has a council-manager system of government. The evidence suggests that higher levels of polarization are associated with higher predicted probabilities that a city has a council-manager system. This effect is robust to the inclusion of a range of political, economic, and demographic controls.
+
+While the effects of different forms of local governance are hotly debated and a common topic for urban politics scholars, the determinants of why certain governments have council-manager versus mayor-council systems is not as well understood. This paper applies a dataset never before tested in the realm of institutional design of local government to argue that one potential determinant of why cities may seek to implement a council-manager system is a response to polarization in the city council. Hopefully, this paper can encourage scholars to more closely examine the role of polarization in local political institutions.
+
+# 5. References
+
+Aguado, N. A. 2018. "Mayor-Council Form of Government and Policy Responses in Times 
+
+|     of Economic Travail". *Politics Policy*, 46(5), 714-730.
+
+Bawn, K. 1995. "Political Control Versus Expertise: Congressional Choices about 
+
+|       Administrative Procedures." *American Political Science Review*, 89(1), 
+
+|       62–73.
+
+Bailey, M. A., Strezhnev, A., & Voeten, E. 2017. “Estimating Dynamic State Preferences
+
+|       from United Nations Voting Data”. *Journal of Conflict Resolution*, 61(2), 
+
+|       430–456.
+
+Bucchianeri, Peter. 2020. “Party Competition and Coalitional Stability: Evidence from
+
+|       American Local Government.” *American Political Science Review*, 114(4), 
+
+|       1055–1070.
+
+Carr, J.B. 2015. "What have we learned about the performance of council-manager 
+
+|       government?" A review and synthesis of the research. *Public Administration* 
+
+|       *Review* 75 (5): 673-689. 
+
+Carr, J.B. and Karuppusamy, S. 2008. "Reassessing the link between city structure and 
+
+|     fiscal policy. Is the problem poor measures of governmental structure?" 
+
+|     *The American Review of Public Administration* 40 (2): 209-228.
+
+DeSantis, V. and Renner, T. 2002. "City government structures: An attempt at 
+
+|     clarification." *State and Local Government Review* 34: 95-104.
+
+Epstein, David, and Sharyn O’Halloran. 1994. “Administrative Procedures, Information,
+
+|        and Agency Discretion.” *American Journal of Political Science* 38(3): 697-722.
+
+Feiock, R.C., Weible, C.M., Carter, D.P., Curley, C., Deslatte, A., and Heikkila, T. 
+
+|     2016. "Capturing structural and functional diversity through institutional 
+
+|     analysis: The mayor position in city charters." *Urban Affairs Review* 52 (1): 
+
+|     129-150.
+
+MacDonald, L. 2008. "The impact of government structure on local public expenditures."
+
+|     *Public Choice* 136: 457-473.
+
+Martin, Andrew, Quinn, Kevin. 2002. "Dynamic Ideal Point Estimation via Markov Chain 
+
+|     Monte Carlo for the U.S. Supreme Court, 1953–1999". *Political Analysis*. 10 
+
+|     (2): 134–153.
+
+
+McCubbins, Mathew. 1985. "The Legislative Design of Regulatory Procedure." *American*
+
+|         *Journal of Political Science*. 29: 721-48.
+
+McCubbins, Mathew, Roger Noll, and Barry Weingast. 1987. "Administrative Procedures 
+
+|         as Instruments of Political Control." *Journal of Law, Economics, and* 
+
+|         *Organization* 3:243-77.
+
+McCubbins, Mathew, Roger Noll, and Barry Weingast. 1989. "Structure and Process; 
+
+|         Politics and Policy: Administrative Arrangements and the Political Control 
+
+|         of Agencies." *Virginia Law Review* 75:431-82.
+
+McCubbins, Mathew, Roger Noll, and Barry Weingast. 1990a. "Public Interest and 
+
+|         Structure-induced Policy." *Journal of Law, Economics, and Organizations* 
+
+|         6:203-12.
+
+McCubbins, Mathew, Roger Noll, and Barry Weingast. 1990b. "Positive and Normative 
+
+|         Models of Procedural Rights: An Integrative Approach to Administrative Procedures." 
+
+|         *Journal of Law, Economics, and Organizations* 6:307-32.
+
+Moe, Terry. 1989. "The Politics of Bureaucratic Structure." In *Can the Government* 
+
+|        *Govern?*, ed. John Chubb and Paul Peterson. Washington: Brookings Institution.
+
+Moon, M.J. and Norris, D.F. 2005. "Does managerial orientation matter? The adoption
+
+|     of reinventing government and e-government at the municipal level." 
+
+|     *Information Systems Journal *15: 43-60.
+
+Morgan, D. and Pelissero, J. 1980. "Urban policy: Does political structure matter?"
+
+|     *American Political Science Review* 74: 999-1006.
+
+Nelson, K.L. and Nollenberger, K. 2011. "Conflict and cooperation in municipalities: 
+
+|     Do variations in form of government have an effect?" *Urban Affairs Review* 
+
+|     47 (5): 696-720.
+
+Nelson, K.L. and Svara, J.H. 2010. "Adaptation of models versus variations in form:" 
+
+|     Classifying structures of city government. *Urban Affairs Review* 45 (4): 544-562.
+
+Nelson, K.L. and Svara. J.H. 2012. “Form of Government Still Matters: Fostering Innovation 
+
+|     in U.S. Municipal Governments.” *American Review of Public Administration*, 
+
+|     42 (3): 257-281.
+
+Poole, Keith T. 2000. “Non-Parametric Unfolding of Binary Choice Data.” *Political Analysis*.
+
+|     8:3: 211–232.
+
+Shor, Boris, and Nolan McCarty. 2011. "The Ideological Mapping of American Legislatures."
+
+|     *American Political Science Review*. 105(3): 530-51.
+
+Tausanovitch, C., & Warshaw, C. 2013. “Measuring Constituent Policy Preferences in 
+
+|     Congress, State Legislatures, and Cities. *The Journal of Politics*, 75(2), 
+
+|     330-342.
+
+Tausanovitch, Chris, and ChristopherWarshaw. 2014. “Representation in Municipal  
+
+|     Government.” *American Political Science Review* 108 (3): 605–41.
+
+Trounstine, J. 2009. "All politics is local: The reemergence of the study of city
+
+|     politics". *Perspectives on Politics*, 611-618.
+
+West, J.P. and Berman, E.M. 1997. "Administrative creativity in local government." 
+
+|     *Public Productivity and Management Review* 20: 446-458.
